@@ -170,3 +170,11 @@ class Util(BaseModel):
             """))
             connection.commit()
             print(f"View '{view_name}' has been created or replaced.")
+
+    @staticmethod
+    def export_reports(view_name: str = "rpt01_reconciliation", output_file: str = "../output_report/rpt01_reconciliation.xlsx") -> None:
+        with Util.engine.connect() as connection:
+            query = text(f"SELECT * FROM {view_name}")
+            df = pd.read_sql(query, connection)
+            df.to_excel(output_file, index=False)
+            print(f"View '{view_name}' has been exported to '{output_file}'.")
