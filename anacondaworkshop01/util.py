@@ -10,6 +10,7 @@ from datetime import datetime
 class Util(BaseModel):
     model_config = ConfigDict(validate_assignment=True)
     engine: ClassVar = create_engine(r"duckdb:///" + conf.DUCKDB_FILEPATH)
+    input_path: ClassVar = conf.PATH_INPUT
 
     @staticmethod
     def load_all_files() -> None:
@@ -28,11 +29,16 @@ class Util(BaseModel):
     @staticmethod
     def _extract_and_load(file_pattern: str, fund_name: str, report_date: str) -> None:
         print(f"Processing: {fund_name} - {report_date} - {file_pattern}")
+        df = Util._extract_file(file_pattern, fund_name, report_date)
+        df.to_sql("raw_fund_eom_report", Util.engine, if_exists="append", index=False)
+
+    @staticmethod
+    def _extract_file(file_pattern, fund_name, report_date) -> pd.DataFrame:
         date_format = "%Y-%m-%d"
         date_obj = datetime.strptime(report_date, date_format)
         file_name = date_obj.strftime(file_pattern)
-        df = pd.read_csv(f"{conf.PATH_INPUT}{file_name}", dtype=str)
+        df = pd.read_csv(f"{Util.input_path}{file_name}", dtype=str)
         df["REPORT DATE"] = report_date
         df["FUND NAME"] = fund_name
         df["_file_name"] = file_name
-        df.to_sql("raw_fund_eom_report", Util.engine, if_exists="append", index=False)
+        return df
