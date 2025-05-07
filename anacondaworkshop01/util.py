@@ -11,6 +11,7 @@ class Util(BaseModel):
     model_config = ConfigDict(validate_assignment=True)
     engine: ClassVar = create_engine(r"duckdb:///" + conf.DUCKDB_FILEPATH)
     input_path: ClassVar = conf.PATH_INPUT
+    target_table: ClassVar = "raw_fund_eom_report"
 
     @staticmethod
     def load_all_files() -> None:
@@ -20,7 +21,8 @@ class Util(BaseModel):
                 Util._extract_and_load(fund_name=fund, report_date=date, file_pattern=pattern)
 
     @staticmethod
-    def _truncate_table(table_name: str = "raw_fund_eom_report") -> None:
+    def _truncate_table() -> None:
+        table_name = Util.target_table
         with Util.engine.connect() as connection:
             connection.execute(text(f"TRUNCATE TABLE {table_name}"))
             connection.commit()
@@ -30,7 +32,7 @@ class Util(BaseModel):
     def _extract_and_load(file_pattern: str, fund_name: str, report_date: str) -> None:
         print(f"Processing: {fund_name} - {report_date} - {file_pattern}")
         df = Util._extract_file(file_pattern, fund_name, report_date)
-        df.to_sql("raw_fund_eom_report", Util.engine, if_exists="append", index=False)
+        df.to_sql(Util.target_table, Util.engine, if_exists="append", index=False)
 
     @staticmethod
     def _extract_file(file_pattern, fund_name, report_date) -> pd.DataFrame:
