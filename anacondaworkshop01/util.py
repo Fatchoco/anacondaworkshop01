@@ -12,11 +12,11 @@ class Util(BaseModel):
     engine: ClassVar = create_engine(r"duckdb:///" + conf.DUCKDB_FILEPATH)
 
     @staticmethod
-    def extract_load() -> None:
+    def load_all_files() -> None:
         Util._truncate_table()
         for date in conf.DATES:
             for fund, pattern in conf.FUNDS.items():
-                Util._read_input_file(fund_name=fund, report_date=date, file_pattern=pattern)
+                Util._extract_and_load(fund_name=fund, report_date=date, file_pattern=pattern)
 
     @staticmethod
     def _truncate_table(table_name: str = "raw_fund_eom_report") -> None:
@@ -26,7 +26,7 @@ class Util(BaseModel):
             print(f"Table '{table_name}' has been truncated.")
 
     @staticmethod
-    def _read_input_file(file_pattern: str, fund_name: str, report_date: str) -> None:
+    def _extract_and_load(file_pattern: str, fund_name: str, report_date: str) -> None:
         print(f"Processing: {fund_name} - {report_date} - {file_pattern}")
         date_format = "%Y-%m-%d"
         date_obj = datetime.strptime(report_date, date_format)
