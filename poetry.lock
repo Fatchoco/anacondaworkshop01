@@ -84,6 +84,28 @@ url = "https://jfrogcloud.gic.com.sg/artifactory/api/pypi/python-all/simple"
 reference = "jfrog"
 
 [[package]]
+name = "duckdb-engine"
+version = "0.17.0"
+description = "SQLAlchemy driver for duckdb"
+optional = false
+python-versions = ">=3.9,<4"
+groups = ["main"]
+files = [
+    {file = "duckdb_engine-0.17.0-py3-none-any.whl", hash = "sha256:3aa72085e536b43faab635f487baf77ddc5750069c16a2f8d9c6c3cb6083e979"},
+    {file = "duckdb_engine-0.17.0.tar.gz", hash = "sha256:396b23869754e536aa80881a92622b8b488015cf711c5a40032d05d2cf08f3cf"},
+]
+
+[package.dependencies]
+duckdb = ">=0.5.0"
+packaging = ">=21"
+sqlalchemy = ">=1.3.22"
+
+[package.source]
+type = "legacy"
+url = "https://jfrogcloud.gic.com.sg/artifactory/api/pypi/python-all/simple"
+reference = "jfrog"
+
+[[package]]
 name = "greenlet"
 version = "3.2.1"
 description = "Lightweight in-process concurrent programming"
@@ -221,6 +243,23 @@ files = [
     {file = "numpy-2.2.5-pp310-pypy310_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0255732338c4fdd00996c0421884ea8a3651eea555c3a56b84892b66f696eb70"},
     {file = "numpy-2.2.5-pp310-pypy310_pp73-win_amd64.whl", hash = "sha256:d2e3bdadaba0e040d1e7ab39db73e0afe2c74ae277f5614dad53eadbecbbb169"},
     {file = "numpy-2.2.5.tar.gz", hash = "sha256:a9c0d994680cd991b1cb772e8b297340085466a6fe964bc9d4e80f5e2f43c291"},
+]
+
+[package.source]
+type = "legacy"
+url = "https://jfrogcloud.gic.com.sg/artifactory/api/pypi/python-all/simple"
+reference = "jfrog"
+
+[[package]]
+name = "packaging"
+version = "25.0"
+description = "Core utilities for Python packages"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "packaging-25.0-py3-none-any.whl", hash = "sha256:29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484"},
+    {file = "packaging-25.0.tar.gz", hash = "sha256:d443872c98d677bf60f6a1f2f8c1cb748e8fe762d2bf9d3148b5599295b0fc4f"},
 ]
 
 [package.source]
@@ -708,4 +747,4 @@ reference = "jfrog"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "1cb6a7be9ce73464331dc3959d19c47e5a71ebc77630543c2af554ea9401a7b1"
+content-hash = "a161af9887692af51c779f36799633661846a8412dbcdd8201d356ef36e2fb88"
