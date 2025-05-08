@@ -11,6 +11,7 @@ class Util(BaseModel):
     model_config = ConfigDict(validate_assignment=True)
     engine: ClassVar = create_engine(r"duckdb:///" + conf.DUCKDB_FILEPATH)
     input_path: ClassVar = conf.PATH_INPUT
+    output_path: ClassVar = conf.PATH_OUTPUT
     target_table: ClassVar = "raw_fund_eom_report"
 
     @staticmethod
@@ -209,10 +210,10 @@ class Util(BaseModel):
             print(f"View '{view_name}' has been created or replaced.")
 
     @staticmethod
-    def export_reports(output_path: str = "../output_report/") -> None:
+    def export_reports() -> None:
         with Util.engine.connect() as connection:
             for report in ["rpt01_reconciliation", "rpt02_bestfund"]:
-                output_file = f"{output_path}{report}.xlsx"
+                output_file = f"{Util.output_path}{report}.xlsx"
                 query = text(f"SELECT * FROM {report}")
                 df = pd.read_sql(query, connection)
                 df.to_excel(output_file, index=False)
