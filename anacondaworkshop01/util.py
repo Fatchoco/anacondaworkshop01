@@ -1,3 +1,5 @@
+import sqlalchemy.engine.base
+
 import conf
 import pandas as pd
 from typing import ClassVar
@@ -49,9 +51,7 @@ class Util(BaseModel):
     @staticmethod
     def transform() -> None:
         with Util.engine.connect() as connection:
-            view_name = "vw_fund_eom_report"
-            connection.execute(text(f"""
-                CREATE OR REPLACE VIEW {view_name} AS
+            Util._create_view(connection, "vw_fund_eom_report", """
                 SELECT
                     "REPORT DATE",
                     "FUND NAME",
@@ -68,52 +68,27 @@ class Util(BaseModel):
                     _created_at
                 FROM
                     raw_fund_eom_report
-            """))
-            connection.commit()
-            print(f"View '{view_name}' has been created or replaced.")
+            """)
 
-            view_name = "vw_bond_prices"
-            connection.execute(text(f"""
-                CREATE OR REPLACE VIEW {view_name} AS
+            Util._create_view(connection, "vw_bond_prices", """
                 SELECT
                     strptime("DATETIME", '%Y-%m-%d')::DATE as "DATETIME",
                     "ISIN",
                     "PRICE"
                 FROM
                     bond_prices
-            """))
-            connection.commit()
-            print(f"View '{view_name}' has been created or replaced.")
+            """)
 
-            view_name = "vw_equity_prices"
-            connection.execute(text(f"""
-                CREATE OR REPLACE VIEW {view_name} AS
+            Util._create_view(connection, "vw_equity_prices", """
                 SELECT
                     strptime("DATETIME", '%m/%d/%Y')::DATE as "DATETIME",
                     "SYMBOL",
                     "PRICE"
                 FROM
                     equity_prices
-            """))
-            connection.commit()
-            print(f"View '{view_name}' has been created or replaced.")
+            """)
 
-            view_name = "vw_equity_prices"
-            connection.execute(text(f"""
-                CREATE OR REPLACE VIEW {view_name} AS
-                SELECT
-                    strptime("DATETIME", '%m/%d/%Y')::DATE as "DATETIME",
-                    "SYMBOL",
-                    "PRICE"
-                FROM
-                    equity_prices
-            """))
-            connection.commit()
-            print(f"View '{view_name}' has been created or replaced.")
-
-            view_name = "rpt02_bestfund"
-            connection.execute(text(f"""
-                CREATE OR REPLACE VIEW {view_name} AS
+            Util._create_view(connection, "rpt01_reconciliation", """
                 WITH fund AS (
                   SELECT * FROM vw_fund_eom_report WHERE "FINANCIAL TYPE" NOT IN ('CASH')
                 ),
@@ -168,13 +143,9 @@ class Util(BaseModel):
                   base_report
                 ORDER BY
                   1, 3, 4, 5
-            """))
-            connection.commit()
-            print(f"View '{view_name}' has been created or replaced.")
+            """)
 
-            view_name = "rpt01_reconciliation"
-            connection.execute(text(f"""
-                CREATE OR REPLACE VIEW rpt02_bestfund AS
+            Util._create_view(connection, "rpt02_bestfund", """
                 with base_monthly AS (
                   SELECT
                     "REPORT DATE",
@@ -205,9 +176,17 @@ class Util(BaseModel):
                 WHERE "Rate of Return" IS NOT NULL
                 QUALIFY "Rank" = 1
                 ORDER BY "REPORT DATE", "Rank"
+            """)
+
+    @staticmethod
+    def _create_view(connection: sqlalchemy.engine.base.Connection, view_name: str, select_statement: str) -> None:
+        create_text = f"CREATE OR REPLACE VIEW {view_name} AS"
+        connection.execute(text(f"""
+                {create_text}
+                {select_statement}
             """))
-            connection.commit()
-            print(f"View '{view_name}' has been created or replaced.")
+        connection.commit()
+        print(f"View '{view_name}' has been created or replaced.")
 
     @staticmethod
     def export_reports() -> None:
