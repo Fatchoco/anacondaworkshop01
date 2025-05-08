@@ -15,6 +15,8 @@ class Util(BaseModel):
     input_path: ClassVar = conf.PATH_INPUT
     output_path: ClassVar = conf.PATH_OUTPUT
     target_table: ClassVar = "raw_fund_eom_report"
+    report01_name: ClassVar = "rpt01_reconciliation"
+    report02_name: ClassVar = "rpt02_bestfund"
 
     @staticmethod
     def load_all_files() -> None:
@@ -88,7 +90,7 @@ class Util(BaseModel):
                     equity_prices
             """)
 
-            Util._create_view(connection, "rpt01_reconciliation", """
+            Util._create_view(connection, Util.report01_name, """
                 WITH fund AS (
                   SELECT * FROM vw_fund_eom_report WHERE "FINANCIAL TYPE" NOT IN ('CASH')
                 ),
@@ -145,7 +147,7 @@ class Util(BaseModel):
                   1, 3, 4, 5
             """)
 
-            Util._create_view(connection, "rpt02_bestfund", """
+            Util._create_view(connection, Util.report02_name, """
                 with base_monthly AS (
                   SELECT
                     "REPORT DATE",
@@ -191,7 +193,7 @@ class Util(BaseModel):
     @staticmethod
     def export_reports() -> None:
         with Util.engine.connect() as connection:
-            for report in ["rpt01_reconciliation", "rpt02_bestfund"]:
+            for report in [Util.report01_name, Util.report02_name]:
                 output_file = f"{Util.output_path}{report}.xlsx"
                 query = text(f"SELECT * FROM {report}")
                 df = pd.read_sql(query, connection)
