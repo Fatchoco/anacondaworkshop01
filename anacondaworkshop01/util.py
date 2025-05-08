@@ -73,7 +73,7 @@ class Util(BaseModel):
 
             view_name = "vw_bond_prices"
             connection.execute(text(f"""
-                CREATE OR REPLACE VIEW vw_bond_prices AS
+                CREATE OR REPLACE VIEW {view_name} AS
                 SELECT
                     strptime("DATETIME", '%Y-%m-%d')::DATE as "DATETIME",
                     "ISIN",
@@ -86,7 +86,7 @@ class Util(BaseModel):
 
             view_name = "vw_equity_prices"
             connection.execute(text(f"""
-                CREATE OR REPLACE VIEW vw_equity_prices AS
+                CREATE OR REPLACE VIEW {view_name} AS
                 SELECT
                     strptime("DATETIME", '%m/%d/%Y')::DATE as "DATETIME",
                     "SYMBOL",
@@ -99,7 +99,7 @@ class Util(BaseModel):
 
             view_name = "vw_equity_prices"
             connection.execute(text(f"""
-                CREATE OR REPLACE VIEW vw_equity_prices AS
+                CREATE OR REPLACE VIEW {view_name} AS
                 SELECT
                     strptime("DATETIME", '%m/%d/%Y')::DATE as "DATETIME",
                     "SYMBOL",
@@ -110,9 +110,9 @@ class Util(BaseModel):
             connection.commit()
             print(f"View '{view_name}' has been created or replaced.")
 
-            view_name = "rpt01_reconciliation"
+            view_name = "rpt02_bestfund"
             connection.execute(text(f"""
-                CREATE OR REPLACE VIEW rpt01_reconciliation AS
+                CREATE OR REPLACE VIEW {view_name} AS
                 WITH fund AS (
                   SELECT * FROM vw_fund_eom_report WHERE "FINANCIAL TYPE" NOT IN ('CASH')
                 ),
@@ -171,10 +171,49 @@ class Util(BaseModel):
             connection.commit()
             print(f"View '{view_name}' has been created or replaced.")
 
+            view_name = "rpt01_reconciliation"
+            connection.execute(text(f"""
+                CREATE OR REPLACE VIEW rpt02_bestfund AS
+                with base_monthly AS (
+                  SELECT
+                    "REPORT DATE",
+                    "FUND NAME",
+                    ROUND(SUM("MARKET VALUE"), 2) as "Fund_MV",
+                    ROUND(SUM("REALISED P/L"), 2) as "REALISED P/L"
+                  FROM
+                    vw_fund_eom_report
+                  GROUP BY
+                    1, 2
+                ), metrics AS (
+                SELECT 
+                    "REPORT DATE",
+                    "FUND NAME",
+                    LAG("Fund_MV") OVER (PARTITION BY "FUND NAME" ORDER BY "REPORT DATE") as "Fund_MV_start",
+                    "Fund_MV" as "Fund_MV_end",
+                    (("Fund_MV_end" - "Fund_MV_start" + "REALISED P/L") / "Fund_MV_start") as "Rate of Return"
+                FROM base_monthly
+                )
+                SELECT
+                    "REPORT DATE",
+                    "FUND NAME",
+                    "Fund_MV_start",
+                    "Fund_MV_end",
+                    "Rate of Return",
+                    RANK() OVER (PARTITION BY "REPORT DATE" ORDER BY "Rate of Return" DESC) as "Rank"
+                FROM metrics
+                WHERE "Rate of Return" IS NOT NULL
+                QUALIFY "Rank" = 1
+                ORDER BY "REPORT DATE", "Rank"
+            """))
+            connection.commit()
+            print(f"View '{view_name}' has been created or replaced.")
+
     @staticmethod
-    def export_reports(view_name: str = "rpt01_reconciliation", output_file: str = "../output_report/rpt01_reconciliation.xlsx") -> None:
+    def export_reports(output_path: str = "../output_report/") -> None:
         with Util.engine.connect() as connection:
-            query = text(f"SELECT * FROM {view_name}")
-            df = pd.read_sql(query, connection)
-            df.to_excel(output_file, index=False)
-            print(f"View '{view_name}' has been exported to '{output_file}'.")
+            for report in ["rpt01_reconciliation", "rpt02_bestfund"]:
+                output_file = f"{output_path}{report}.xlsx"
+                query = text(f"SELECT * FROM {report}")
+                df = pd.read_sql(query, connection)
+                df.to_excel(output_file, index=False)
+                print(f"View '{report}' has been exported to '{output_file}'.")
