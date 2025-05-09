@@ -15,6 +15,7 @@ pandas = "^2.2.3"
 duckdb-engine = "^0.17.0"
 pytest = "^8.3.5"
 pytest-mock = "^3.14.0"
+openpyxl = "^3.1.5"
 
 
 [[tool.poetry.source]]
