@@ -1,6 +1,10 @@
 ```shell
-# Install project
+# Install project (in GIC network)
 poetry install
+
+# Install project (outside GIC network [public internet])
+poetry source remove jfrog
+poetry update
 
 ## make sure to activate virtualenv
 
