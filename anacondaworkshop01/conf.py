@@ -1,5 +1,6 @@
 DUCKDB_FILEPATH = "../db/dbfile.db"
 PATH_INPUT = "../input_data/"
+PATH_OUTPUT = "../output_report/"
 
 DATES = [
     "2022-08-31",
